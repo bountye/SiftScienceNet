@@ -39,11 +39,14 @@ namespace SiftScienceNet
     /// </summary>
     public class SiftScienceClient : ISiftScienceClient
     {
-        private static string _apiKey;
-        
-        public SiftScienceClient(string apiKey)
+        private string _apiKey;
+        private IHttpClient _client;
+
+
+        public SiftScienceClient(IHttpClient client, string apiKey)
         {
-            _apiKey = apiKey;                        
+            this._apiKey = apiKey;
+            this._client = client;
         }
 
         #region Events
@@ -285,10 +288,10 @@ namespace SiftScienceNet
 
         private async Task<ResponseStatus> PostEvent(string jsonContent, bool returnScore)
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            HttpResponseMessage response = await client.PostAsync(returnScore ? Globals.EventsWithScoreEndpoint : Globals.EventsEndpoint, new StringContent(jsonContent, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+            //var client = new HttpClient();
+            //this._client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            this._client.SetAccept("application/json");
+            HttpResponseMessage response = await this._client.PostAsync(returnScore ? Globals.EventsWithScoreEndpoint : Globals.EventsEndpoint, new StringContent(jsonContent, Encoding.UTF8, "application/json")).ConfigureAwait(false);
 
             var siftResponse = JsonConvert.DeserializeObject<SiftResponse>(response.Content.ReadAsStringAsync().Result);
 
@@ -348,9 +351,10 @@ namespace SiftScienceNet
                 json.Add("$description", description);
             }
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            HttpResponseMessage response = await client.PostAsync(string.Format(Globals.LabelsEndpoint, Uri.EscapeDataString(userId)), new StringContent(json.ToString(), Encoding.UTF8, "application/json")).ConfigureAwait(false);
+            //var client = new HttpClient();
+            //this._client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            this._client.SetAccept("application/json");
+            HttpResponseMessage response = await this._client.PostAsync(string.Format(Globals.LabelsEndpoint, Uri.EscapeDataString(userId)), new StringContent(json.ToString(), Encoding.UTF8, "application/json")).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -374,10 +378,11 @@ namespace SiftScienceNet
 
         public async Task<ScoreResponse> GetSiftScore(string userId)
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //var client = new HttpClient();
+            //this._client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            this._client.SetAccept("application/json");
 
-            HttpResponseMessage response = await client.GetAsync(string.Format(Globals.ScoresEndpoint, Uri.EscapeDataString(userId), _apiKey)).ConfigureAwait(false);
+            HttpResponseMessage response = await this._client.GetAsync(string.Format(Globals.ScoresEndpoint, Uri.EscapeDataString(userId), _apiKey)).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
